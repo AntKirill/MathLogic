@@ -9,8 +9,8 @@ bool checker::check(shared_ptr<node> root) noexcept {
     if (check_axioms(root) || check_assumtions(root) || check_MP(root)) {
         all_we_have.insert(make_pair(root->expression, line));
         if (root->op == IMPL) {
-            left_impl.insert(make_pair(line, root->left->expression));
-            right_impl.insert(make_pair(root->right->expression, line));
+            left_impl.insert(make_pair(line, root->children[0]->expression));
+            right_impl.insert(make_pair(root->children[1]->expression, line));
         }
         return true;
     }
@@ -78,16 +78,16 @@ bool checker::cur_axiom(shared_ptr<node> u, shared_ptr<node> root) noexcept {
             if (vax->op == VARIABLE) {
                 if (!check_mapped_expr(exprax_to_expr, vax->expression[0], v->expression)) return false;
             }
-            if (vax->left != nullptr) {
-                qax.push(vax->left);
-                q.push(v->left);
+            if (vax->children[0] != nullptr) {
+                qax.push(vax->children[0]);
+                q.push(v->children[0]);
             }
-            if (vax->right != nullptr) {
-                qax.push(vax->right);
-                q.push(v->right);
+            if (vax->children[1] != nullptr) {
+                qax.push(vax->children[1]);
+                q.push(v->children[1]);
             }
         } else {
-            if (vax->left == nullptr && vax->right == nullptr) {
+            if (vax->children[0] == nullptr && vax->children[1] == nullptr) {
                 if (!check_mapped_expr(exprax_to_expr, vax->expression[0], v->expression)) return false;
             } else return false;
         }
@@ -105,17 +105,17 @@ bool checker::check_mapped_expr(unordered_map<char, string> &m, char u, string &
 
 
 bool checker::check_nodes_structure(shared_ptr<node> v, shared_ptr<node> u) noexcept {
-    if (v->left == nullptr && (v->right == nullptr)) {
-        return u->left == nullptr && u->right == nullptr;
+    if (v->children[0] == nullptr && (v->children[1] == nullptr)) {
+        return u->children[0] == nullptr && u->children[1] == nullptr;
     }
-    if (v->left == nullptr && v->right != nullptr) {
-        return u->left == nullptr && u->right != nullptr;
+    if (v->children[0] == nullptr && v->children[1] != nullptr) {
+        return u->children[0] == nullptr && u->children[1] != nullptr;
     }
-    if (v->left != nullptr && v->right == nullptr) {
-        return u->left != nullptr && u->right == nullptr;
+    if (v->children[0] != nullptr && v->children[1] == nullptr) {
+        return u->children[0] != nullptr && u->children[1] == nullptr;
     }
-    if (v->left != nullptr && v->right != nullptr) {
-        return u->left != nullptr && u->right != nullptr;
+    if (v->children[0] != nullptr && v->children[1] != nullptr) {
+        return u->children[0] != nullptr && u->children[1] != nullptr;
     }
     return false;
 }

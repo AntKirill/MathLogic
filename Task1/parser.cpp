@@ -57,17 +57,17 @@ shared_ptr<node> parser::expr() noexcept {
     shared_ptr<node> sub_root = disj();
     if (cur_token == IMPL) {
         shared_ptr<node> new_sub_root(new node());
-        new_sub_root->left = sub_root;
-        new_sub_root->right = expr();
+        new_sub_root->children[0] = sub_root;
+        new_sub_root->children[1] = expr();
         new_sub_root->op = IMPL;
         sub_root = new_sub_root;
     }
     while (cur_token == IMPL) {
         shared_ptr<node> right_children(new node());
         right_children->op = IMPL;
-        right_children->left = sub_root->right;
-        sub_root->right = right_children;
-        right_children->right = expr();
+        right_children->children[0] = sub_root->children[1];
+        sub_root->children[1] = right_children;
+        right_children->children[1] = expr();
     }
     return sub_root;
 }
@@ -79,8 +79,8 @@ shared_ptr<node> parser::disj() noexcept {
         next_token();
         shared_ptr<node> new_sub_root(new node());
         new_sub_root->op = OR;
-        new_sub_root->left = sub_root;
-        new_sub_root->right = conj();
+        new_sub_root->children[0] = sub_root;
+        new_sub_root->children[1] = conj();
         sub_root = new_sub_root;
     }
     return sub_root;
@@ -93,8 +93,8 @@ shared_ptr<node> parser::conj() noexcept {
         next_token();
         shared_ptr<node> new_sub_root(new node());
         new_sub_root->op = AND;
-        new_sub_root->left = sub_root;
-        new_sub_root->right = negetion();
+        new_sub_root->children[0] = sub_root;
+        new_sub_root->children[1] = negetion();
         sub_root = new_sub_root;
     }
     return sub_root;
@@ -113,7 +113,7 @@ shared_ptr<node> parser::negetion() noexcept {
         next_token();
         shared_ptr<node> sub(new node());
         sub->op = NOT;
-        sub->left = negetion();
+        sub->children[0] = negetion();
         return sub;
     } else if (cur_token == BRACKET) {
         shared_ptr<node> sub = expr();
@@ -126,11 +126,11 @@ shared_ptr<node> parser::negetion() noexcept {
 
 string parser::to_string(shared_ptr<node> u) noexcept {
     string ul(""), ur("");
-    if (u->left != nullptr) {
-        ul = to_string(u->left);
+    if (u->children[0] != nullptr) {
+        ul = to_string(u->children[0]);
     }
-    if (u->right != nullptr) {
-        ur = to_string(u->right);
+    if (u->children[1] != nullptr) {
+        ur = to_string(u->children[1]);
     }
     string sign;
     switch (u->op) {

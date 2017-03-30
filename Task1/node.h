@@ -4,15 +4,15 @@
 #include "token.h"
 #include <iostream>
 #include <memory>
+#include <vector>
 
 struct node {
 
     token op;
+
     std::string expression;
 
-    std::shared_ptr<node> left, right;
-
-    node() noexcept : left(nullptr), right(nullptr) { }
+    std::vector<std::shared_ptr<node>> children = {nullptr, nullptr}; //filled from 0 to nodes.size() with actual shared_ptr's on nodes
 };
 
 #endif
