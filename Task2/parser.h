@@ -29,13 +29,13 @@ class parser {
 
     std::shared_ptr<node> predicate() noexcept;
 
-    std::shared_ptr<node> term() noexcept;
+    std::shared_ptr<node> term() noexcept; //add | term PLUS add
 
-    std::shared_ptr<node> add() noexcept;
+    std::shared_ptr<node> add() noexcept; //mult | add MULT mult
 
-    std::shared_ptr<node> mult() noexcept;
-    
-    std::string to_string(std::shared_ptr<node> u) noexcept;
+    std::shared_ptr<node> mult() noexcept; //var term | var | ( term ) | 0 | mult
+
+	std::string to_string(std::shared_ptr<node> &u) noexcept;
 
 public:
 	std::shared_ptr<node> parse(std::string &expression) noexcept;	
