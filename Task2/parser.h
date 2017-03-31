@@ -7,15 +7,15 @@
 #include "token.h"
 
 class parser {
-	std::string expression;
-
     size_t pos;
 
     token cur_token;
 
     std::string cur_variable;
 
-    void next_token() noexcept;
+    void get_token(const std::string &expression) noexcept;
+
+	void next_token() noexcept;
 
     std::shared_ptr<node> expr() noexcept;
 
@@ -37,8 +37,12 @@ class parser {
 
 	std::string to_string(std::shared_ptr<node> &u) noexcept;
 
+	std::vector<token_with_name> tokens;
+
+	void make_tokens(const std::string &expression) noexcept ;
+
 public:
-	std::shared_ptr<node> parse(std::string &expression) noexcept;	
+	std::shared_ptr<node> parse(const std::string &expression) noexcept;
 };
 
 #endif

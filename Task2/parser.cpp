@@ -1,10 +1,11 @@
 #include "parser.h"
 #include "node.h"
 #include <iostream>
+#include <stack>
 
 using namespace std;
 
-void parser::next_token() noexcept { //TODO update grammar
+void parser::get_token(const std::string &expression) noexcept { //TODO update grammar
     while (pos < expression.length()) {
         switch (expression[pos]) {
             case ' ':
@@ -76,7 +77,6 @@ void parser::next_token() noexcept { //TODO update grammar
     cur_token = END;
 }
 
-
 shared_ptr<node> parser::expr() noexcept {
     next_token();
     shared_ptr<node> sub_root = disj();
@@ -90,10 +90,9 @@ shared_ptr<node> parser::expr() noexcept {
     return sub_root;
 }
 
-
 shared_ptr<node> parser::disj() noexcept {
     shared_ptr<node> sub_root = conj();
-    if (cur_token == OR) {
+    while (cur_token == OR) {
         next_token();
         shared_ptr<node> new_sub_root = make_shared<node>();
         new_sub_root->op = OR;
@@ -104,10 +103,9 @@ shared_ptr<node> parser::disj() noexcept {
     return sub_root;
 }
 
-
 shared_ptr<node> parser::conj() noexcept {
     shared_ptr<node> sub_root = unary();
-    if (cur_token == AND) {
+    while (cur_token == AND) {
         next_token();
         shared_ptr<node> new_sub_root = make_shared<node>();
         new_sub_root->op = AND;
@@ -117,8 +115,6 @@ shared_ptr<node> parser::conj() noexcept {
     }
     return sub_root;
 }
-
-
 
 shared_ptr<node> parser::unary() noexcept {
     if (cur_token == EXIST || cur_token == ANY) {
@@ -134,7 +130,7 @@ shared_ptr<node> parser::unary() noexcept {
         sub->op = NOT;
         sub->children[0] = unary();
         return sub;
-    } else if (cur_token == BRACKET_OPEN) {
+    } else if (cur_token == BRACKET_OPEN_EXPR) {
         shared_ptr<node> sub = expr(); //TODO: Might be not an expression!!!
         next_token(); //takes close bracket
         return sub;
@@ -158,7 +154,7 @@ std::shared_ptr<node> parser::predicate() noexcept {
         sub->op = PREDICATE_NAME;
         sub->expression = cur_variable;
         next_token(); //open bracket
-        if (cur_token != BRACKET_OPEN) return sub;
+        if (cur_token != BRACKET_OPEN_TERM) return sub;
         next_token(); //takes first token of term
         if (cur_token == BRACKET_CLOSE) return sub;
         sub->children[0] = term();
@@ -170,18 +166,25 @@ std::shared_ptr<node> parser::predicate() noexcept {
         }
         next_token();
     } else {
-        sub->op = EQUAL;
-        sub->children[0] = term();
-        //now cur_token == EQUAL
-        next_token();
-        sub->children[1] = term();
+        sub = term();
+        if (cur_token == EQUAL) {
+            shared_ptr<node> new_sub_root = make_shared<node>();
+            new_sub_root->op = EQUAL;
+            new_sub_root->children[0] = sub;
+            next_token();
+            new_sub_root->children[1] = term();
+            sub = new_sub_root;
+        }
+//        //now cur_token == EQUAL
+//        next_token();
+//        sub->children[1] = term();
     }
     return sub;
 }
 
 std::shared_ptr<node> parser::term() noexcept {
     shared_ptr<node> sub = add();
-    if (cur_token == PLUS) {
+    while (cur_token == PLUS) {
         next_token();
         shared_ptr<node> new_sub_root = make_shared<node>();
         new_sub_root->op = PLUS;
@@ -194,7 +197,7 @@ std::shared_ptr<node> parser::term() noexcept {
 
 std::shared_ptr<node> parser::add() noexcept {
     shared_ptr<node> sub = mult();
-    if (cur_token == MULTIPLY) {
+    while (cur_token == MULTIPLY) {
         next_token();
         shared_ptr<node> new_sub_root = make_shared<node>();
         new_sub_root->op = MULTIPLY;
@@ -209,7 +212,7 @@ std::shared_ptr<node> parser::mult() noexcept {
     shared_ptr<node> sub = make_shared<node>();
     if (cur_token == VARIABLE) {
         sub = var();
-        if (cur_token == BRACKET_OPEN) {
+        if (cur_token == BRACKET_OPEN_TERM) {
             next_token();
             sub->children[0] = term();
             int cnt = 1;
@@ -220,14 +223,23 @@ std::shared_ptr<node> parser::mult() noexcept {
             }
             next_token();
         }
-    } else if (cur_token == BRACKET_OPEN) {
+    } else if (cur_token == BRACKET_OPEN_TERM) {
+        next_token();
         sub = term();
         next_token();
     } else {
         sub->children[0] = mult();
         sub->op = HATCH;
-        next_token(); //takes token after hatch
-    }     
+        next_token();
+
+    }
+    while (cur_token == HATCH) {
+        shared_ptr<node> new_sub = make_shared<node>();
+        new_sub->op = HATCH;
+        new_sub->children[0] = sub;
+        sub = new_sub;
+        next_token();
+    }
     return sub;
 }
 
@@ -312,10 +324,43 @@ string parser::to_string(shared_ptr<node> &u) noexcept {
 }
 
 
-shared_ptr<node> parser::parse(string &expression) noexcept {
-    this->expression = expression;
+shared_ptr<node> parser::parse(const string &expression) noexcept {
+    pos = 0;
+    tokens.clear();
+    make_tokens(expression);
     pos = 0;
     shared_ptr<node> root = expr();
     this->to_string(root);
     return root;
+}
+
+void parser::make_tokens(const std::string &expression) noexcept {
+    get_token(expression);
+    std::stack<bracket_t> br;
+    while (cur_token != END) {
+        if (cur_token == VARIABLE || cur_token == PREDICATE_NAME) tokens.push_back(token_with_name(cur_token, cur_variable));
+        else tokens.push_back(token_with_name(cur_token));
+        if (cur_token == BRACKET_OPEN) {
+            br.push(bracket_t(tokens.size() - 1, BRACKET_OPEN_TERM));
+        } else if (cur_token == BRACKET_CLOSE) {
+            bracket_t v = br.top();
+            br.pop();
+            if (v.type == BRACKET_OPEN_EXPR) {
+                if (br.size() > 0) br.top().type = BRACKET_OPEN_EXPR;
+                tokens[v.pos] = BRACKET_OPEN_EXPR;
+            } else tokens[v.pos] = BRACKET_OPEN_TERM;
+        } else if (cur_token == PREDICATE_NAME || cur_token == EQUAL || cur_token == ANY || cur_token == EXIST) {
+            if (br.size() > 0) br.top().type = BRACKET_OPEN_EXPR;
+        }
+        get_token(expression);
+    }
+    tokens.push_back(token_with_name(END));
+}
+
+void parser::next_token() noexcept {
+    if (cur_token != END || pos == 0) {
+        cur_token = tokens[pos].type;
+        cur_variable = tokens[pos].name;
+        ++pos;
+    }
 }
