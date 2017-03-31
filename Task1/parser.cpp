@@ -62,13 +62,6 @@ shared_ptr<node> parser::expr() noexcept {
         new_sub_root->op = IMPL;
         sub_root = new_sub_root;
     }
-    while (cur_token == IMPL) {
-        shared_ptr<node> right_children(new node());
-        right_children->op = IMPL;
-        right_children->children[0] = sub_root->children[1];
-        sub_root->children[1] = right_children;
-        right_children->children[1] = expr();
-    }
     return sub_root;
 }
 
