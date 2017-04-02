@@ -1,1 +1,8 @@
-Abc | !Abvbvb
+P(a)->Q(a)|-P(a)->?aQ(a)
+Q(a)->?aQ(a)
+(Q(a)->?aQ(a))->P(a)->(Q(a)->?aQ(a))
+P(a)->(Q(a)->?aQ(a))
+P(a)->Q(a)
+(P(a)->Q(a))->(P(a)->(Q(a)->?aQ(a)))->(P(a)->?aQ(a))
+(P(a)->(Q(a)->?aQ(a)))->(P(a)->?aQ(a))
+P(a)->?aQ(a)
