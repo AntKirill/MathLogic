@@ -42,16 +42,6 @@ static inline bool update_term(string &var_of_phi, string &term, node_ptr &Q_ptr
     return false;
 }
 
-/*
- * Put all variables from tree with root in v to unoredred_set variables.
- */
-static void get_all_variables(node_ptr &v, unordered_set<string> &variables) noexcept {
-    for (size_t i = 0; i < v->children.size() && v->children[i] != nullptr; i++) {
-        get_all_variables(v->children[i], variables);
-    }
-    if (v->op == VARIABLE) variables.insert(v->expression);
-}
-
 static string get_variable_name(string &expression) {
     string tmp("");
     int pos = 0;
@@ -62,6 +52,16 @@ static string get_variable_name(string &expression) {
         ++pos;
     }
     return tmp;
+}
+
+/*
+ * Put all variables from tree with root in v to unoredred_set variables.
+ */
+static void get_all_variables(node_ptr &v, unordered_set<string> &variables) noexcept {
+    for (size_t i = 0; i < v->children.size() && v->children[i] != nullptr; i++) {
+        get_all_variables(v->children[i], variables);
+    }
+    if (v->op == VARIABLE) variables.insert(get_variable_name(v->expression));
 }
 
 static bool check_free(node_ptr &v, const unordered_set<string> &variables, unordered_set<string> &busy,
@@ -89,6 +89,7 @@ static bool check_free(node_ptr &v, const unordered_set<string> &variables, unor
 static string get_predicate_name(string &expression) {
     string tmp("");
     int pos = 0;
+    while (expression[pos] == '(') ++pos;
     while ((pos < expression.length()) && 
         (('A' <= expression[pos] && expression[pos] <= 'Z')  || 
             ('0' <= expression[pos] && expression[pos] <= '9'))) {
@@ -138,6 +139,7 @@ static bool find_substituted_term(node_ptr &phi, node_ptr &u, node_ptr &Q_ptr, s
 static inline bool check_subtrees(node_ptr &phi, node_ptr &u, string &&killed_variable) noexcept {
     node_ptr Q_ptr;
     if (!find_substituted_term(phi, u, Q_ptr, killed_variable)) return false;
+    if (Q_ptr == nullptr) return true;
     unordered_set<string> variables;
     get_all_variables(Q_ptr, variables);
     unordered_set<string> busy;
@@ -201,7 +203,7 @@ static bool cur_axiom(node_ptr &u, node_ptr &root) noexcept {
 
 bool checker::check(node_ptr &&root) noexcept {
     line++;
-    if (check_axioms(root) || check_assumtions(root) || check_MP(root)) {
+    if (check_axioms(root) || check_assumtions(root) || check_deduction_rules(root)) {
         all_we_have.insert(make_pair(root->expression, line));
         if (root->op == IMPL) {
             left_impl.insert(make_pair(line, root->children[0]->expression));
@@ -236,6 +238,16 @@ bool checker::check_MP(node_ptr &root) noexcept {
     }
     return false;
 }
+
+bool checker::check_FA_rules(std::shared_ptr<node> &root) noexcept {
+    return false;
+}
+
+
+bool checker::check_deduction_rules(std::shared_ptr<node> &root) noexcept {
+    return check_MP(root) || check_FA_rules(root);
+}
+
 
 bool checker::check_assumtions(node_ptr &root) noexcept {
     string k = root->expression;
