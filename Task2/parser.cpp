@@ -5,7 +5,7 @@
 
 using namespace std;
 
-void parser::get_token(const std::string &expression) noexcept { //TODO update grammar
+void parser::get_token(const std::string &expression) noexcept {
     while (pos < expression.length()) {
         switch (expression[pos]) {
             case ' ':
@@ -132,7 +132,7 @@ shared_ptr<node> parser::unary() noexcept {
         sub->children[0] = unary();
         return sub;
     } else if (cur_token == BRACKET_OPEN_EXPR) {
-        shared_ptr<node> sub = expr(); //TODO: Might be not an expression!!!
+        shared_ptr<node> sub = expr();
         next_token(); //takes close bracket
         return sub;
     } else { //predicate

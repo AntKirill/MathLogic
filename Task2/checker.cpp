@@ -52,6 +52,18 @@ static void get_all_variables(node_ptr &v, unordered_set<string> &variables) noe
     if (v->op == VARIABLE) variables.insert(v->expression);
 }
 
+static string get_variable_name(string &expression) {
+    string tmp("");
+    int pos = 0;
+    while ((pos < expression.length()) &&
+           (('a' <= expression[pos] && expression[pos] <= 'z') ||
+            ('0' <= expression[pos] && expression[pos] <= '9'))) {
+        tmp += expression[pos];
+        ++pos;
+    }
+    return tmp;
+}
+
 static bool check_free(node_ptr &v, const unordered_set<string> &variables, unordered_set<string> &busy,
     bool parent_quantifier = false) noexcept {
     if (v->substituted) {
@@ -59,8 +71,9 @@ static bool check_free(node_ptr &v, const unordered_set<string> &variables, unor
             if (busy.count(var)) return false; //not free for substitution!
         }
     }
+    string name = get_variable_name(v->expression);
     if (v->op == VARIABLE && parent_quantifier) {
-        busy.insert(v->expression);
+        busy.insert(name);
     }
     parent_quantifier = false;
     if (v->op == ANY || v->op == EXIST) parent_quantifier = true;
@@ -68,7 +81,7 @@ static bool check_free(node_ptr &v, const unordered_set<string> &variables, unor
         if (!check_free(v->children[i], variables, busy, parent_quantifier)) return false;
     }
     if (v->op == VARIABLE && parent_quantifier) {
-        busy.erase(v->expression);
+        busy.erase(name);
     }
     return true;
 }
@@ -102,7 +115,7 @@ static bool find_substituted_term(node_ptr &phi, node_ptr &u, node_ptr &Q_ptr, s
                 string name_phi = get_predicate_name(v_phi->expression);
                 if (name_v != name_phi) return false;
             }
-            if (v_phi->op == VARIABLE) {
+            if (v_phi->children[0] == nullptr && v_phi->children[1] == nullptr && v->children.size() == 2) {
                 if (!update_term(v_phi->expression, term, Q_ptr, v, killed_variable)) return false;
             }
             for (size_t i = 0; i < v_phi->children.size() && v_phi->children[i] != nullptr; i++) {
@@ -129,18 +142,6 @@ static inline bool check_subtrees(node_ptr &phi, node_ptr &u, string &&killed_va
     get_all_variables(Q_ptr, variables);
     unordered_set<string> busy;
     return check_free(u, variables, busy);
-}
-
-static string get_variable_name(string &expression) {
-        string tmp("");
-        int pos = 0;
-        while ((pos < expression.length()) &&
-               (('a' <= expression[pos] && expression[pos] <= 'z') ||
-                ('0' <= expression[pos] && expression[pos] <= '9'))) {
-            tmp += expression[pos];
-            ++pos;
-        }
-        return tmp;
 }
 
 /*
