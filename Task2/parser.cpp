@@ -65,7 +65,8 @@ void parser::get_token(const std::string &expression) noexcept { //TODO update g
             tmp += expression[pos];
             pos++;
         }
-        if (tmp == "") while ((pos < expression.length()) && ('A' <= expression[pos] && expression[pos] <= 'Z')) {
+        if (tmp == "") while ((pos < expression.length()) && (('A' <= expression[pos] && expression[pos] <= 'Z')  || 
+            ('0' <= expression[pos] && expression[pos] <= '9'))) {
             cur_token = PREDICATE_NAME;
             tmp += expression[pos];
             pos++;
@@ -175,9 +176,6 @@ std::shared_ptr<node> parser::predicate() noexcept {
             new_sub_root->children[1] = term();
             sub = new_sub_root;
         }
-//        //now cur_token == EQUAL
-//        next_token();
-//        sub->children[1] = term();
     }
     return sub;
 }
@@ -297,13 +295,19 @@ string parser::to_string(shared_ptr<node> &u) noexcept {
     if (u->op == ANY || u->op == EXIST) { //must have one child
         ans = _to_string(u) + to_string(u->children[0]);
     } else if (u->op == VARIABLE && u->children[0] != nullptr ) {
-        ans = _to_string(u) + "(" + to_string(u->children[0]) + ")";
+        ans = _to_string(u) + "(";
+        ans += to_string(u->children[0]);
+        for (size_t i = 1; i < u->children.size(); i++) {
+            if (u->children[i] == nullptr) break;
+            ans += "," + to_string(u->children[i]);
+        }
+        ans += ")";
     } else if (u->op == VARIABLE && u->children[0] == nullptr && u->children[1] == nullptr) {
         ans = _to_string(u);
     } else if (u->op == PREDICATE_NAME) {
-        ans = _to_string(u) + "(";
+        ans = "(" + _to_string(u) + "(";
         if (u->children[0] == nullptr) {
-            ans += ")";
+            ans += "))";
             return ans;
         }
         ans += to_string(u->children[0]);
@@ -311,7 +315,7 @@ string parser::to_string(shared_ptr<node> &u) noexcept {
             if (u->children[i] == nullptr) break;
             ans += "," + to_string(u->children[i]);
         }
-        ans += ")";
+        ans += "))";
     } else if (u->op == NOT) {
         ans = "(!" + to_string(u->children[0]) + ")";
     } else if (u->op == HATCH) {

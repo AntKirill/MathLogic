@@ -6,7 +6,7 @@ using namespace std;
 
 using node_ptr = std::shared_ptr<node>;
 
-static inline bool check_nodes_structure(shared_ptr<node> &v, shared_ptr<node> &u) noexcept {
+static inline bool check_nodes_structure(node_ptr &v, node_ptr &u) noexcept {
     if (v->children.size() != u->children.size()) return false;
     for (size_t i = 0; i < v->children.size(); i++) {
         if (v->children[i] == nullptr && u->children[i] != nullptr ||
@@ -25,19 +25,26 @@ static inline bool check_mapped_expr(unordered_map<string, string> &m, const str
     return true;
 }
 
-static inline bool update_term(string &var_of_phi, const string &term, node_ptr &Q_ptr, node_ptr &condidate) noexcept {
-    if (var_of_phi != "" && var_of_phi != term) return false;
-    var_of_phi = term;
-    Q_ptr = condidate;
+static inline bool update_term(string &var_of_phi, string &term, node_ptr &Q_ptr, node_ptr &condidate, string &killed_variable) noexcept {
+    if (var_of_phi == condidate->expression) return true;
 
-    condidate->substituted = true;
-
-    return true;
+    if (killed_variable != var_of_phi) return false;
+    if (term == "") {
+        Q_ptr = condidate;
+        term = condidate->expression;
+        condidate->substituted = true;
+        return true;
+    }
+    if (term == condidate->expression) {
+        condidate->substituted = true;
+        return true;
+    }
+    return false;
 }
 
 /*
-// Put all variables from tree with root in v to unoredred_set variables.
-*/
+ * Put all variables from tree with root in v to unoredred_set variables.
+ */
 static void get_all_variables(node_ptr &v, unordered_set<string> &variables) noexcept {
     for (size_t i = 0; i < v->children.size() && v->children[i] != nullptr; i++) {
         get_all_variables(v->children[i], variables);
@@ -66,9 +73,20 @@ static bool check_free(node_ptr &v, const unordered_set<string> &variables, unor
     return true;
 }
 
-static bool find_substituted_term(node_ptr &phi, node_ptr &u, node_ptr &Q_ptr) noexcept {
-    string var_of_phi;
-    string term;    
+static string get_predicate_name(string &expression) {
+    string tmp("");
+    int pos = 0;
+    while ((pos < expression.length()) && 
+        (('A' <= expression[pos] && expression[pos] <= 'Z')  || 
+            ('0' <= expression[pos] && expression[pos] <= '9'))) {
+        tmp += expression[pos];
+        ++pos;
+    }
+    return tmp;
+}
+
+static bool find_substituted_term(node_ptr &phi, node_ptr &u, node_ptr &Q_ptr, string &killed_variable) noexcept {
+    string term;
     queue<node_ptr> q_phi, q;
     q_phi.push(phi);
     q.push(u);
@@ -77,73 +95,86 @@ static bool find_substituted_term(node_ptr &phi, node_ptr &u, node_ptr &Q_ptr) n
         q_phi.pop();
         node_ptr v = q.front();
         q.pop();
-        /*
-         * TODO: if v_phi and v are functions or predicates then check there names
-         * if they are predicates and names are different return false, but if names are the same then go further
-         * if they are functions and names are different we found term condidate, else go further
-         */
         if (check_nodes_structure(v_phi, v)) {
             if (v_phi->op != v->op) return false;
+            if (v_phi->op == PREDICATE_NAME) {
+                string name_v = get_predicate_name( v->expression);
+                string name_phi = get_predicate_name(v_phi->expression);
+                if (name_v != name_phi) return false;
+            }
             if (v_phi->op == VARIABLE) {
-                if (!update_term(var_of_phi, term, Q_ptr, v)) return false;
+                if (!update_term(v_phi->expression, term, Q_ptr, v, killed_variable)) return false;
             }
             for (size_t i = 0; i < v_phi->children.size() && v_phi->children[i] != nullptr; i++) {
                 q_phi.push(v_phi->children[i]);
                 q.push(v->children[i]);
             }
         } else {
-            if (v_phi->children[0] == nullptr && v_phi->children[1] == nullptr && v->children.size() == 2) 
-                if (!update_term(var_of_phi, term, Q_ptr, v)) return false;
-            else return false;
+            if (v_phi->children[0] == nullptr && v_phi->children[1] == nullptr && v->children.size() == 2) {
+                if (!update_term(v_phi->expression, term, Q_ptr, v, killed_variable)) return false;
+            } else return false;
         }
     }
+
     return true;
 } 
 
 /*
-//Helps to check this: @/? a PHI(a) -> PHI(a:=Q). Determins if term Q is free for substitution to PHI instead of a.
-*/
-static inline bool check_subtrees(node_ptr &phi, node_ptr &u) noexcept {
+ * Helps to check this: @/? a PHI(a) -> PHI(a:=Q). Determins if term Q is free for substitution to PHI instead of a.
+ */
+static inline bool check_subtrees(node_ptr &phi, node_ptr &u, string &&killed_variable) noexcept {
     node_ptr Q_ptr;
-    if (!find_substituted_term(phi, u, Q_ptr)) return false;
+    if (!find_substituted_term(phi, u, Q_ptr, killed_variable)) return false;
     unordered_set<string> variables;
     get_all_variables(Q_ptr, variables);
     unordered_set<string> busy;
     return check_free(u, variables, busy);
 }
 
+static string get_variable_name(string &expression) {
+        string tmp("");
+        int pos = 0;
+        while ((pos < expression.length()) &&
+               (('a' <= expression[pos] && expression[pos] <= 'z') ||
+                ('0' <= expression[pos] && expression[pos] <= '9'))) {
+            tmp += expression[pos];
+            ++pos;
+        }
+        return tmp;
+}
+
 /*
-// Checks if current line is 11th axiom.
-// v - is root of tree for current line.
-*/
-static inline bool check_11_axiom(std::shared_ptr<node> &v) noexcept {
+ * Checks if current line is 11th axiom.
+ * v - is root of tree for current line.
+ */
+static inline bool check_11_axiom(node_ptr &v) noexcept {
     if (v->op == IMPL && v->children[0]->op == ANY && v->children[0]->children[0]->op == VARIABLE) {
-        return check_subtrees(v->children[0]->children[0]->children[0], v->children[1]);
+        return check_subtrees(v->children[0]->children[0]->children[0], v->children[1], get_variable_name(v->children[0]->children[0]->expression));
     }
     return false;
 }
 
-static inline bool check_12_axiom(std::shared_ptr<node> &v) noexcept {
+static inline bool check_12_axiom(node_ptr &v) noexcept {
     if (v->op == IMPL && v->children[1]->op == EXIST && v->children[1]->children[0]->op == VARIABLE) {
-        return check_subtrees(v->children[1]->children[0]->children[0], v->children[0]);
+        return check_subtrees(v->children[1]->children[0]->children[0], v->children[0], get_variable_name(v->children[1]->children[0]->expression));
     }
     return false;
 }
 
 /*
-// Checks if current line is current axiom.
-// u - is root of tree for current axiom.
-// root - is root of tree for current line.
-*/
-static bool cur_axiom(shared_ptr<node> &u, shared_ptr<node> &root) noexcept {
+ * Checks if current line is current axiom.
+ * u - is root of tree for current axiom.
+ * root - is root of tree for current line.
+ */
+static bool cur_axiom(node_ptr &u, node_ptr &root) noexcept {
     unordered_map<string, string> exprax_to_expr;
-    queue<shared_ptr<node>> qax, q;
+    queue<node_ptr> qax, q;
     qax.push(u);
     q.push(root);
     while (!qax.empty()) {
-        shared_ptr<node> vax = qax.front();
+        node_ptr vax = qax.front();
         qax.pop();
-        shared_ptr<node> v = q.front();
+        node_ptr v = q.front();
         q.pop();
         if (check_nodes_structure(vax, v)) {
             if (vax->op != v->op) return false;
@@ -167,7 +198,7 @@ static bool cur_axiom(shared_ptr<node> &u, shared_ptr<node> &root) noexcept {
     return true;
 }
 
-bool checker::check(shared_ptr<node> &&root) noexcept {
+bool checker::check(node_ptr &&root) noexcept {
     line++;
     if (check_axioms(root) || check_assumtions(root) || check_MP(root)) {
         all_we_have.insert(make_pair(root->expression, line));
@@ -189,9 +220,9 @@ int checker::get_line_number() noexcept {
     return line;
 }
 
-bool checker::check_MP(shared_ptr<node> &root) noexcept {
+bool checker::check_MP(node_ptr &root) noexcept {
     string k = root->expression;
-    pair<std::unordered_multimap<string, int>::iterator, std::unordered_multimap<string, int>::iterator>
+    pair<unordered_multimap<string, int>::iterator, unordered_multimap<string, int>::iterator>
             beg_end = right_impl.equal_range(root->expression);
     for (auto it = beg_end.first; it != beg_end.second; it++) {
         int number_of_line = it->second;
@@ -205,7 +236,7 @@ bool checker::check_MP(shared_ptr<node> &root) noexcept {
     return false;
 }
 
-bool checker::check_assumtions(shared_ptr<node> &root) noexcept {
+bool checker::check_assumtions(node_ptr &root) noexcept {
     string k = root->expression;
     for (size_t i = 0; i < assumptions.size(); i++) {
         if (assumptions[i] == k) {
@@ -216,7 +247,7 @@ bool checker::check_assumtions(shared_ptr<node> &root) noexcept {
     return false;
 }
 
-bool checker::check_axioms(shared_ptr<node> &root) noexcept {
+bool checker::check_axioms(node_ptr &root) noexcept {
     for (size_t i = 0; i < axioms.size(); i++) {
         if (cur_axiom(axioms[i], root)) {
             if (i + 1 >= 11) i+=2;
