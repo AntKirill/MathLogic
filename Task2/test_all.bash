@@ -26,3 +26,4 @@ echo -en 'running \033[01;31mincorrect\033[00m tests \n';
 ./b.out 1 incorrect11.in;
 ./b.out 1 incorrect5.in;
 ./b.out 1 incorrect6.in;
+rm b.out;
