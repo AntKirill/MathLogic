@@ -100,8 +100,21 @@ static string get_predicate_name(string &expression) {
     return tmp;
 }
 
+static bool substituted_for_free_entry(node_ptr v, string &new_term, string &old_term, bool quantifier_for_old_term = false) {
+    if (v->op == ANY || v->op == EXIST) {
+        string name = get_variable_name(v->children[0]->expression);
+        if (name == old_term) quantifier_for_old_term = true;
+    }
+    if (v->expression == new_term && quantifier_for_old_term) return false;
+    for (size_t i = 0; i < v->children.size() && v->children[i] != nullptr; i++) {
+        if (!substituted_for_free_entry(v->children[i], new_term, old_term, quantifier_for_old_term)) return false;
+    }
+    return true;
+}
+
 /*
- * phi is expression with busy variable (killed_variable) a, u is expression where Q_ptr is probobly subsituted instead of a.
+ * phi is expression with busy variable (killed_variable), u is expression where Q_ptr is probobly subsituted instead of 
+ * variable (killed_variable).
  */
 static bool find_substituted_term(node_ptr &phi, node_ptr &u, node_ptr &Q_ptr, string &killed_variable) noexcept {
     string term;
@@ -134,7 +147,7 @@ static bool find_substituted_term(node_ptr &phi, node_ptr &u, node_ptr &Q_ptr, s
         }
     }
 
-    return true;
+    return Q_ptr == nullptr ? true : substituted_for_free_entry(u, Q_ptr->expression, killed_variable);
 }
 
 /*

@@ -12,7 +12,8 @@
 */
 struct node {
 
-    token op; //TODO make it const
+    //TODO make it const
+    token op;
 
     std::string expression;
 
