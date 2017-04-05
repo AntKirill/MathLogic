@@ -8,40 +8,46 @@
 #include "node.h"
 
 class axioms_and_assumptions {
-std::vector<std::string> string_axioms = {
-                                "A->B->A",
-                                "(A->B)->(A->B->C)->(A->C)",
-                                "A->B->A&B",
-                                "A&B->A",
-                                "A&B->B",
-                                "A->A|B",
-                                "B->A|B",
-                                "(A->C)->(B->C)->(A|B->C)",
-                                "(A->B)->(A->!B)->!A",
-                                "!!A->A",
+    std::vector<std::string> string_axioms = {
+            "A->B->A",
+            "(A->B)->(A->B->C)->(A->C)",
+            "A->B->A&B",
+            "A&B->A",
+            "A&B->B",
+            "A->A|B",
+            "B->A|B",
+            "(A->C)->(B->C)->(A|B->C)",
+            "(A->B)->(A->!B)->!A",
+            "!!A->A",
 
-                                "a=b->a'=b'",
-                                "a=b->a=c->b=c",
-                                "a'=b'->a=b",
-                                "!a'=0",
-                                "a+b'=(a+b)'",
-                                "a+0=a",
-                                "a*0=0",
-                                "a*b'=a*b+a"};
+            "a=b->a'=b'",
+            "a=b->a=c->b=c",
+            "a'=b'->a=b",
+            "!a'=0",
+            "a+b'=(a+b)'",
+            "a+0=a",
+            "a*0=0",
+            "a*b'=a*b+a"};
 
 
     void parse_assumptions(parser &p, std::string &s, std::string &all_fun_is_for) {
         std::string tmp("");
         s += ' ';
+        int balance = 0;
         for (size_t i = 0; i < s.length() - 1; i++) {
             if (s[i] == ' ') {
                 continue;
-            } else if (s[i] != ',' && !(s[i] == '|' && s[i + 1] == '-')) {
+            } else if (s[i] == '(') {
+                ++balance;
+                tmp += s[i];
+            } else if (s[i] == ')') {
+                --balance;
+                tmp += s[i];
+            } else if ((s[i] != ',' && !(s[i] == '|' && s[i + 1] == '-')) || (s[i] == ',' && balance != 0)) {
                 tmp += s[i];
             } else {
                 if (tmp != "") {
                     parsed_assumptions.push_back(p.parse(tmp)->expression);
-                    tmp = "";
                 }
                 if ((s[i] == '|' && s[i + 1] == '-')) i++;
             }
@@ -68,4 +74,5 @@ public:
     }
 
 };
+
 #endif

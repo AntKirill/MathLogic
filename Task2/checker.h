@@ -26,11 +26,19 @@ class checker {
 
     bool check_MP(std::shared_ptr<node> &root) noexcept;
 
+    bool check_FA_rules(std::shared_ptr<node> &root) noexcept;
+
+    bool check_deduction_rules(std::shared_ptr<node> &root) noexcept;
+
 public:
 
     checker(axioms_and_assumptions &axs) noexcept : axioms(axs.parsed_axioms), assumptions(axs.parsed_assumptions) { }
 
-    bool check(std::shared_ptr<node> &&root) noexcept;
+    bool check(std::shared_ptr<node> &root) noexcept;
+
+    bool check(std::shared_ptr<node> &&root) noexcept {
+        return check(root);
+    }
 
     std::string get_annotation() noexcept;
 
