@@ -1,6 +1,0 @@
-/home/kirill/GitHub/git-repos/MathLogic/Task2/build/CMakeFiles/edit_cache.dir
-/home/kirill/GitHub/git-repos/MathLogic/Task2/build/CMakeFiles/rebuild_cache.dir
-/home/kirill/GitHub/git-repos/MathLogic/Task2/build/CMakeFiles/Math_logic_HW2.dir
-/home/kirill/GitHub/git-repos/MathLogic/Task2/build/proofing_library/CMakeFiles/edit_cache.dir
-/home/kirill/GitHub/git-repos/MathLogic/Task2/build/proofing_library/CMakeFiles/rebuild_cache.dir
-/home/kirill/GitHub/git-repos/MathLogic/Task2/build/proofing_library/CMakeFiles/lib.dir
