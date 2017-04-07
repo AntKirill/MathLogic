@@ -271,16 +271,8 @@ bool checker::check(node_ptr &root) noexcept {
         }
         return true;
     }
-    annotation_st = "Не доказано";
+    annotation_st = annotation(NOT_PROOFED);
     return false;
-}
-
-string checker::get_annotation() noexcept {
-    return annotation_st;
-}
-
-int checker::get_line_number() noexcept {
-    return line;
 }
 
 
@@ -293,7 +285,8 @@ bool checker::check_MP(node_ptr &root) noexcept {
         string left = left_impl.find(number_of_line)->second;
         auto it_number_second_line = all_we_have.find(left);
         if (it_number_second_line != all_we_have.end()) {
-            annotation_st = "M.P. " + to_string(it_number_second_line->second) + " " + to_string(number_of_line);
+            //annotation_st = "M.P. " + to_string(it_number_second_line->second) + " " + to_string(number_of_line);
+            annotation_st = annotation(MP, left, left + "->" + root->expression);
             return true;
         }
     }
@@ -309,7 +302,7 @@ bool checker::check_FA_rules(std::shared_ptr<node> &root) noexcept {
             string expr = "(" + root->children[0]->expression + "->" +
                           root->children[1]->children[0]->children[0]->expression + ")";
             if (all_we_have.count(expr)) {
-                annotation_st = "Правило вывода для любого по строке " + to_string(all_we_have[expr]);
+                annotation_st = annotation(DEDUCTION_ANY, expr);//"Правило вывода для любого по строке " + to_string(all_we_have[expr]);
                 return true;
             }
         }
@@ -322,7 +315,7 @@ bool checker::check_FA_rules(std::shared_ptr<node> &root) noexcept {
             string expr = "(" + root->children[0]->children[0]->children[0]->expression + "->" +
                           root->children[1]->expression + ")";
             if (all_we_have.count(expr)) {
-                annotation_st = "Правило вывода для некоторого по строке " + to_string(all_we_have[expr]);
+                annotation_st = annotation(DEDUCTION_EXIST, expr);//"Правило вывода для некоторого по строке " + to_string(all_we_have[expr]);
                 return true;
             }
         }
@@ -340,7 +333,7 @@ bool checker::check_assumtions(node_ptr &root) noexcept {
     string k = root->expression;
     for (size_t i = 0; i < assumptions.size(); i++) {
         if (assumptions[i] == k) {
-            annotation_st = "Предп. " + to_string(i + 1);
+            annotation_st = annotation(ASSUMP);//"Предп. " + to_string(i + 1);
             return true;
         }
     }
@@ -351,20 +344,20 @@ bool checker::check_axioms(node_ptr &root) noexcept {
     for (size_t i = 0; i < axioms.size(); i++) {
         if (cur_axiom(axioms[i], root)) {
             if (i + 1 >= 11) i += 2;
-            annotation_st = "Сх. акс. " + to_string(i + 1);
+            annotation_st = annotation(i + 1);// "Сх. акс. " + to_string(i + 1);
             return true;
         }
     }
     if (check_11_axiom(root)) {
-        annotation_st = "Сх. акс. 11";
+        annotation_st = annotation(11);//"Сх. акс. 11";
         return true;
     }
     if (check_12_axiom(root)) {
-        annotation_st = "Сх. акс. 12";
+        annotation_st = annotation(12);//"Сх. акс. 12";
         return true;
     }
     if (check_induction(root)) {
-        annotation_st = "Индукция";
+        annotation_st = annotation(AXIOM_INDUCTION);
         return true;
     }
     return false;

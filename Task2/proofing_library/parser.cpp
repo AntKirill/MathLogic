@@ -5,79 +5,6 @@
 
 using namespace std;
 
-void parser::get_token(const std::string &expression) noexcept {
-    while (pos < expression.length()) {
-        switch (expression[pos]) {
-            case ' ':
-                pos++;
-                continue;
-            case '&' :
-                cur_token = AND;
-                break;
-            case '|':
-                cur_token = OR;
-                break;
-            case '!':
-                cur_token = NOT;
-                break;
-            case '(':
-                cur_token = BRACKET_OPEN;
-                break;
-            case ')':
-                cur_token = BRACKET_CLOSE;
-                break;
-            case '@':
-                cur_token = ANY;
-                break;
-            case '?':
-                cur_token = EXIST;
-                break;
-            case '\'':
-                cur_token = HATCH;
-                break;
-            case '*':
-                cur_token = MULTIPLY;
-                break;
-            case '+':
-                cur_token = PLUS;
-                break;
-            case '=':
-                cur_token = EQUAL;
-                break;
-            case ',':
-                cur_token = COMMA;
-                break;
-            default:
-                break;
-        }
-        if (pos < expression.length() - 1) {
-            if (expression[pos] == '-' && expression[pos + 1] == '>') {
-                cur_token = IMPL;
-                pos += 2;
-                return;
-            }
-        }
-        string tmp("");
-        while ((pos < expression.length()) &&
-               (('a' <= expression[pos] && expression[pos] <= 'z') ||
-                ('0' <= expression[pos] && expression[pos] <= '9'))) {
-            cur_token = VARIABLE;
-            tmp += expression[pos];
-            pos++;
-        }
-        if (tmp == "") while ((pos < expression.length()) && (('A' <= expression[pos] && expression[pos] <= 'Z')  || 
-            ('0' <= expression[pos] && expression[pos] <= '9'))) {
-            cur_token = PREDICATE_NAME;
-            tmp += expression[pos];
-            pos++;
-        }
-        if (cur_token != VARIABLE && cur_token != PREDICATE_NAME) pos++;
-        else cur_variable = tmp;
-        return;
-    }
-    cur_token = END;
-}
-
 shared_ptr<node> parser::expr() noexcept {
     next_token();
     shared_ptr<node> sub_root = disj();
@@ -156,7 +83,7 @@ std::shared_ptr<node> parser::predicate() noexcept {
         sub->expression = cur_variable;
         next_token(); //open bracket
         if (cur_token != BRACKET_OPEN_TERM) return sub;
-        next_token(); //takes first token of term
+        next_token(); //takes first tokens of term
         if (cur_token == BRACKET_CLOSE) return sub;
         sub->children[0] = term();
         int cnt = 1;
@@ -241,7 +168,7 @@ std::shared_ptr<node> parser::mult() noexcept {
     return sub;
 }
 
-static string _to_string(shared_ptr<node> u) {
+static string _to_string(shared_ptr<node> u) noexcept {
     string sign("");
     token t = u->op;
     switch (t) {
@@ -329,42 +256,8 @@ string parser::to_string(shared_ptr<node> &u) noexcept {
 
 
 shared_ptr<node> parser::parse(const string &expression) noexcept {
-    pos = 0;
-    tokens.clear();
     make_tokens(expression);
-    pos = 0;
     shared_ptr<node> root = expr();
     this->to_string(root);
     return root;
-}
-
-void parser::make_tokens(const std::string &expression) noexcept {
-    get_token(expression);
-    std::stack<bracket_t> br;
-    while (cur_token != END) {
-        if (cur_token == VARIABLE || cur_token == PREDICATE_NAME) tokens.push_back(token_with_name(cur_token, cur_variable));
-        else tokens.push_back(token_with_name(cur_token));
-        if (cur_token == BRACKET_OPEN) {
-            br.push(bracket_t(tokens.size() - 1, BRACKET_OPEN_TERM));
-        } else if (cur_token == BRACKET_CLOSE) {
-            bracket_t v = br.top();
-            br.pop();
-            if (v.type == BRACKET_OPEN_EXPR) {
-                if (br.size() > 0) br.top().type = BRACKET_OPEN_EXPR;
-                tokens[v.pos] = BRACKET_OPEN_EXPR;
-            } else tokens[v.pos] = BRACKET_OPEN_TERM;
-        } else if (cur_token == PREDICATE_NAME || cur_token == EQUAL || cur_token == ANY || cur_token == EXIST) {
-            if (br.size() > 0) br.top().type = BRACKET_OPEN_EXPR;
-        }
-        get_token(expression);
-    }
-    tokens.push_back(token_with_name(END));
-}
-
-void parser::next_token() noexcept {
-    if (cur_token != END || pos == 0) {
-        cur_token = tokens[pos].type;
-        cur_variable = tokens[pos].name;
-        ++pos;
-    }
 }

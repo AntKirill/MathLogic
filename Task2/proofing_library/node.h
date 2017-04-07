@@ -1,20 +1,23 @@
 #ifndef NODE_H
 #define NODE_H
 
-#include "token.h"
+#include "tokens.h"
 #include <iostream>
 #include <memory>
 #include <vector>
 
 /*
-// node contains token of every line in proovement.	Every line represented as a tree with vertexis - object of this class.
-// It will be allocated a lot of times.
-*/
+ * node contains tokens of every line in proofment and vector of its children.	Every line represented as a tree with vertexis - object of this class.
+ * It will be allocated a lot of times.
+ */
 struct node {
 
     //TODO make it const
     token op;
 
+    /*
+     * Containes subformula with operation op in root
+     */
     std::string expression;
 
     /*

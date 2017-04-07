@@ -10,6 +10,7 @@
 #include "node.h"
 #include "parser.h"
 #include "axioms_and_assumptions.h"
+#include "line_annotation.h"
 
 class checker {
     std::vector<std::shared_ptr<node>> axioms;
@@ -17,7 +18,7 @@ class checker {
     std::unordered_multimap<std::string, int> right_impl; //right node's expr in every tree with impl in root TO number of line
     std::unordered_map<int, std::string> left_impl; //number of line TO left node's expr of every tree with impl in root
     int line = 0; //for counting lines
-    std::string annotation_st;
+    annotation annotation_st;
     std::vector<std::string> assumptions;
 
     bool check_axioms(std::shared_ptr<node> &root) noexcept;
@@ -40,9 +41,13 @@ public:
         return check(root);
     }
 
-    std::string get_annotation() noexcept;
+    annotation get_annotation() noexcept {
+        return annotation_st;
+    }
 
-    int get_line_number() noexcept;
+    int get_line_number() noexcept {
+        return line;
+    }
 
 };
 

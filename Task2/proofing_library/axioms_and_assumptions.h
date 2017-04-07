@@ -65,7 +65,7 @@ public:
 
     std::vector<std::string> parsed_assumptions;
 
-    axioms_and_assumptions(std::string &assump) {
+    axioms_and_assumptions(std::string &assump) noexcept {
         parser p;
         parse_assumptions(p, assump, all_fun_is_for);
         for (auto s: string_axioms) {

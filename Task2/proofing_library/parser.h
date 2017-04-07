@@ -4,18 +4,10 @@
 #include <memory>
 #include <string>
 #include "node.h"
-#include "token.h"
+#include "tokens.h"
+#include "string_handler.h"
 
-class parser {
-    size_t pos;
-
-    token cur_token;
-
-    std::string cur_variable;
-
-    void get_token(const std::string &expression) noexcept;
-
-	void next_token() noexcept;
+class parser : private string_handler {
 
     std::shared_ptr<node> expr() noexcept;
 
@@ -29,19 +21,16 @@ class parser {
 
     std::shared_ptr<node> predicate() noexcept;
 
-    std::shared_ptr<node> term() noexcept; //add | term PLUS add
+    std::shared_ptr<node> term() noexcept; 
 
-    std::shared_ptr<node> add() noexcept; //mult | add MULT mult
+    std::shared_ptr<node> add() noexcept; 
 
-    std::shared_ptr<node> mult() noexcept; //var term | var | ( term ) | 0 | mult
+    std::shared_ptr<node> mult() noexcept; 
 
 	std::string to_string(std::shared_ptr<node> &u) noexcept;
 
-	std::vector<token_with_name> tokens;
-
-	void make_tokens(const std::string &expression) noexcept ;
-
 public:
+    
 	std::shared_ptr<node> parse(const std::string &expression) noexcept;
 };
 

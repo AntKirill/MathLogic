@@ -1,7 +1,7 @@
 #include <iostream>
-#include "parser.h"
-#include "checker.h"
-#include "axioms_and_assumptions.h"
+#include "proofing_library/parser.h"
+#include "proofing_library/checker.h"
+#include "proofing_library/axioms_and_assumptions.h"
 
 using namespace std;
 
@@ -23,12 +23,9 @@ int main() {
     while (getline(cin, s)) {
         std::shared_ptr<node> root = p.parse(s);
         if (!ch.check(root)) {
-//            printf("Не доказано начиная со строчки %d\n", ch.get_line_number());
             cerr << "ERROR!";
             break;
         }
-
-        printf("(%d) %s (%s)\n", ch.get_line_number(), s.data(), ch.get_annotation().data());
     }
 
     fclose(stdin);

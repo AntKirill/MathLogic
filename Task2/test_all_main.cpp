@@ -1,13 +1,13 @@
 #include <iostream>
-#include "parser.h"
-#include "checker.h"
-#include "axioms_and_assumptions.h"
+#include "proofing_library/parser.h"
+#include "proofing_library/checker.h"
+#include "proofing_library/axioms_and_assumptions.h"
 
 using namespace std;
 
 int main(int argc, char** argv) {
     string filename(*(argv + 2));
-    string prefix = "tests/";
+    string prefix = "../tests/";
     filename = prefix + filename;
 	freopen(filename.c_str(), "r", stdin);
     //freopen("good6.in", "r", stdin);
@@ -31,8 +31,6 @@ int main(int argc, char** argv) {
             cerr << "ERROR! (" + to_string(ch.get_line_number()) + ") ";
             break;
         }
-
-        printf("(%d) %s (%s)\n", ch.get_line_number(), (root->expression).data(), ch.get_annotation().data());
     }
 
     fclose(stdin);
