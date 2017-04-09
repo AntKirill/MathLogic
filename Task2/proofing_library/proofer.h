@@ -17,13 +17,15 @@ class proofer : private string_handler {
 
 	std::ifstream finput;
 
-	const std::string input_mp = "proof_generation_templates/mp.txt";
-	const std::string input_deduction_any = "proof_generation_templates/deduction_any.txt";
-	const std::string input_deduction_exist = "proof_generation_templates/deduction_exist.txt";
-	const std::string input_axiom_and_assump = "proof_generation_templates/axiom_and_assumption.txt";
-	const std::string input_last_assump = "proof_generation_templates/last_assumption.txt";
+	const std::string prefix = "proof_generation_templates/";
 
-	void generation(const std::string &file_name, const std::string &B,const std::string &C) noexcept;
+	const std::string input_mp = prefix + "mp.txt";
+	const std::string input_deduction_any = prefix + "deduction_any.txt";
+	const std::string input_deduction_exist = prefix + "deduction_exist.txt";
+	const std::string input_axiom_and_assump = prefix + "axiom_and_assumption.txt";
+	const std::string input_last_assump = prefix + "last_assumption.txt";
+
+	void generation(const std::string &file_name, const std::string &B,const std::string &C,const std::string &variable) noexcept;
 
 public:
 

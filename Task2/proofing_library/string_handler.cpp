@@ -75,7 +75,9 @@ void string_handler::get_token(const std::string &expression) noexcept {
 }
 
 void string_handler::make_tokens(const std::string &expression) noexcept {
+    //std::cerr << expression << std::endl;
 	pos = 0;
+    cur_token = BEGIN;
     tokens.clear();
     get_token(expression);
     std::stack<string_handler::bracket_t> br;
@@ -83,8 +85,11 @@ void string_handler::make_tokens(const std::string &expression) noexcept {
         if (cur_token == VARIABLE || cur_token == PREDICATE_NAME) tokens.push_back(token_with_name(cur_token, cur_variable));
         else tokens.push_back(token_with_name(cur_token));
         if (cur_token == BRACKET_OPEN) {
+            //std::cerr << pos << std::endl;
             br.push(bracket_t(tokens.size() - 1, BRACKET_OPEN_TERM));
         } else if (cur_token == BRACKET_CLOSE) {
+            //std::cerr << pos << std::endl;
+            if (br.empty()) break;
             bracket_t v = br.top();
             br.pop();
             if (v.type == BRACKET_OPEN_EXPR) {
@@ -106,4 +111,29 @@ void string_handler::next_token() noexcept {
         cur_variable = tokens[pos].name;
         ++pos;
     }
+}
+
+std::string string_handler::get_variable_name(std::string &expression) noexcept {
+    std::string tmp("");
+    int pos = 0;
+    while ((pos < expression.length()) &&
+           (('a' <= expression[pos] && expression[pos] <= 'z') ||
+            ('0' <= expression[pos] && expression[pos] <= '9'))) {
+        tmp += expression[pos];
+        ++pos;
+    }
+    return tmp;
+}
+
+std::string string_handler::get_predicate_name(std::string &expression) noexcept {
+    std::string tmp("");
+    int pos = 0;
+    while (expression[pos] == '(') ++pos;
+    while ((pos < expression.length()) &&
+           (('A' <= expression[pos] && expression[pos] <= 'Z') ||
+            ('0' <= expression[pos] && expression[pos] <= '9'))) {
+        tmp += expression[pos];
+        ++pos;
+    }
+    return tmp;
 }

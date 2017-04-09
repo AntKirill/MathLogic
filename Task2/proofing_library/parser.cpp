@@ -15,6 +15,13 @@ shared_ptr<node> parser::expr() noexcept {
         new_sub_root->op = IMPL;
         sub_root = new_sub_root;
     }
+    // while (cur_token == IMPL) {
+    //     shared_ptr<node> right_children = make_shared<node>();
+    //     right_children->op = IMPL;
+    //     right_children->children[0] = sub_root->children[1];
+    //     sub_root->children[1] = right_children;
+    //     right_children->children[1] = expr();
+    // }    
     return sub_root;
 }
 
@@ -84,7 +91,10 @@ std::shared_ptr<node> parser::predicate() noexcept {
         next_token(); //open bracket
         if (cur_token != BRACKET_OPEN_TERM) return sub;
         next_token(); //takes first tokens of term
-        if (cur_token == BRACKET_CLOSE) return sub;
+        if (cur_token == BRACKET_CLOSE) {
+            next_token();
+            return sub;
+        }
         sub->children[0] = term();
         int cnt = 1;
         while (cur_token == COMMA) {
@@ -256,6 +266,8 @@ string parser::to_string(shared_ptr<node> &u) noexcept {
 
 
 shared_ptr<node> parser::parse(const string &expression) noexcept {
+    //cerr << expression << endl;
+    if (expression == "") return nullptr;
     make_tokens(expression);
     shared_ptr<node> root = expr();
     this->to_string(root);

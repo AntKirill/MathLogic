@@ -13,6 +13,10 @@ struct string_handler {
 
 	void next_token() noexcept;
 
+	static std::string get_variable_name(std::string &expression) noexcept;
+
+	static std::string get_predicate_name(std::string &expression) noexcept;
+
 	string_handler() noexcept : pos(0) {}
 
 private:
