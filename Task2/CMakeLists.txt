@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD 14)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -w -O3")
 
-set(MAIN_PROJECT_SOURCE_FILES test_all_main.cpp)
+set(MAIN_PROJECT_SOURCE_FILES hw2_main.cpp)
 
 include_directories(proofing_library)
 add_executable(${PROJECT_NAME} ${MAIN_PROJECT_SOURCE_FILES})

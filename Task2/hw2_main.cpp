@@ -17,9 +17,13 @@ int main() {
 
     string all_fun_is_for;
     parser p;
+
+    //cerr << p.parse(s)->expression << endl;
     axioms_and_assumptions axs(s);
     proofer generator(axs.last_assumption);
     checker ch(axs);
+
+    bool ok = true;
 
     cout << s << endl;
     while (getline(fin, s)) {
@@ -28,6 +32,7 @@ int main() {
             cerr << "ERROR!";
             freopen("out.txt", "w", stdout);
             printf("Вывод некорректен начиная с формулы номер %d\n", ch.get_line_number());
+            ok = false;
             break;
         }
         generator.generate(root, ch.get_annotation());
@@ -37,5 +42,5 @@ int main() {
     fclose(stdout);
     cerr << (clock())/1000000.0 << endl;
 
-    return 0;
+    return ok ? 0 : 1;
 }

@@ -4,29 +4,13 @@ cmake ..;
 make;
 echo -en 'compilation finished\n\n';
 echo -en '---running \033[01;31mcorrect\033[00m tests--- \n\n';
-./$b 1 correct10.in;
-./$b 1 correct15.in;
-./$b 1 correct7.in;
-./$b 1 correct1.in;
-./$b 1 correct8.in;
-./$b 1 correct14.in;
-./$b 1 correct6.in;
-./$b 1 correct12.in;
-./$b 1 correct2.in;
-./$b 1 correct9.in;
-./$b 1 correct13.in;
-./$b 1 correct5.in;
-./$b 1 correct11.in;
-./$b 1 incorrect1.in;
-./$b 1 incorrect4.in;
-./$b 1 incorrect9.in;
+for i in 1 2 5 6 7 8 9 10 11 12 13 14 15
+do 
+	./$b 1 correct$i.in
+done
 echo -en '\n';
 echo -en '---running \033[01;31mincorrect\033[00m tests--- \n\n';
-./$b 1 incorrect2.in;
-./$b 1 incorrect7.in;
-./$b 1 incorrect3.in;
-./$b 1 incorrect8.in;
-./$b 1 incorrect10.in;
-./$b 1 incorrect11.in;
-./$b 1 incorrect5.in;
-./$b 1 incorrect6.in;
+for i in 1 2 3 4 5 6 7 8 9 10 11
+do
+	./$b 1 incorrect$i.in
+done
