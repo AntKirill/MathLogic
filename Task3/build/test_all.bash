@@ -1,3 +1,5 @@
+cmake ..
+make
 MAX=100;
 MIN=0;
 BROKEN=0;
