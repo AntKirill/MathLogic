@@ -71,3 +71,14 @@ void proofer::generate(const node_ptr &root, const annotation &ann) noexcept {
         case NOT_PROOFED:return;
     }
 }
+
+void proofer::generate_caption(const std::vector<std::string> &assump, const std::string &all_fun_is_for) noexcept {
+    if (assump.size() == 0) {
+        printf("|- %s\n", all_fun_is_for.data());
+        return;
+    }
+    for (size_t i = 0; i < assump.size() - 1; i++) {
+        printf("%s ", assump[i].data());
+    }
+    printf("|-(%s)->(%s)\n", assump[assump.size() - 1].data(), all_fun_is_for.data());
+}

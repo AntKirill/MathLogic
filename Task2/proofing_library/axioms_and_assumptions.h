@@ -55,8 +55,8 @@ class axioms_and_assumptions {
                 }
                 if ((s[i] == '|' && s[i + 1] == '-')) {
                     i++;
-                    last_assumption = root->expression;
                     if (tmp != "") {
+                        last_assumption = root->expression;
                         std::unordered_map<std::string, int> busy;
                         get_free_variables(root, busy, free_variables_from_last_assumption);
                     }

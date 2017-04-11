@@ -7,6 +7,7 @@
 #include "node.h"
 #include "line_annotation.h"
 #include <fstream>
+#include <vector>
 /*
  * Takes line of correct to that line proofment and generating proofment for A->B, where A is assumption and B is taken line.
  */
@@ -28,6 +29,8 @@ class proofer : private string_handler {
 	void generation(const std::string &file_name, const std::string &B,const std::string &C,const std::string &variable) noexcept;
 
 public:
+
+	static void generate_caption(const std::vector<std::string> &, const std::string &) noexcept;
 
 	void generate(const node_ptr &root, const annotation &ann) noexcept;
 
