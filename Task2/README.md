@@ -7,7 +7,7 @@ Then go in directory build/ and run test_all.bash.
 
 ## For compiling project to check your own proofments :
 
-Ghange MAIN_PROJECT_SOURCE_FILES in CMakeLists to hw2_main.cpp.
+Change MAIN_PROJECT_SOURCE_FILES in CMakeLists to hw2_main.cpp.
 Then go in directory build/ and run compile_hw2.bash.
 Stay in that directory and write your proofment in file proof.in, after that run Math_logic_HW2. Results will be in file out.txt.
 
