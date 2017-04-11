@@ -18,5 +18,5 @@ Then go in directory build/ and run test_generation.bash.
 
 ## Output of program :
 
-If proof in proof.in is correct then necessary proof will be in out.txt and time of work will be shown on stdout. Otherwise first line with misstake will be in out.txt and there will be written "ERROR!" and time of work on stdout.
+If proof in proof.in is correct then necessary proof will be in out.txt and time of work will be shown on stdout. Otherwise first line with mistake will be in out.txt and there will be written "ERROR!" and time of work on stdout.
 
